@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <style>
+        .main-box {
+            position: relative;
+            height: calc(50vw * 0.75);
+            width: 50vw;
+            display: block;
+            margin: auto;
+        }
+        .scope {
+            position: absolute;
+            height: 100%;
+            width: 100%;
+        }
+        #gif_img {
+            position: relative;
+            top: 31%;
+            left: 11%;
+            transform: translate(-50%, -50%);
+            height: 23%;
+        }
+        #question {
+            position: relative;
+            top: 63.2%;
+            left: 21.8vw;
+            color: white;
+            font-size: 3.3vw;
+            font-family: Microsoft Sans Serif;
+            text-align: center;
+        }
+        #answer {
+            position: relative;
+            top: 54.5%;
+            left: 16.7vw;
+            color: white;
+            font-size: 4.5vw;
+            font-family: Microsoft Sans Serif;
+            text-align: center;
+            transition: 0s;
+        }
+        #answer.active {
+            position: relative;
+            top: -70.5%;
+            left: 0vw;
+            color: white;
+            font-size: 29vw;
+            font-family: Microsoft Sans Serif;
+            text-align: center;
+            transition: 0.5s;
+        }
+        #OK {
+            position: relative;
+            top: 50%;
+            left: 19.5vw;
+            color: orange;
+            font-size: 0px;
+            font-family: Microsoft Sans Serif;
+            text-align: center;
+            transition: 0s;
+        }
+        #OK.active {
+            position: relative;
+            top: 30%;
+            left: 19.5vw;
+            color: orange;
+            font-size: 5vw;
+            font-family: Microsoft Sans Serif;
+            text-align: center;
+            transition: 0.3s;
+        }
+        #sports_name {
+            position: relative;
+            transform: translate(-50%, -50%);
+            top: 50%;
+            left: 50%;
+            width:100%;
+        }
+        #video {
+            transform: scaleX(-1);
+            width: 100%;
+        }
+        .black_move {
+            width: 100%;
+            overflow: hidden;
+        }
+        #pict_black {
+            position: relative;
+            transform: translate(-50%, -50%);
+            top: 50%;
+            left: 50%;
+            width:100%;
+            transition: 0.25s;
+        }
+        #pict_black.active {
+            position: relative;
+            transform: translate(-50%, -50%);
+            top: 50%;
+            left: 50%;
+            width: 400%;
+            transition: 0s;
+        }
+        .explain_text p {
+            margin: 5px 0px;
+            font-weight: bold;
+        }
+    </style>
+    <meta charset="UTF-8" />
+</head>
+<body background="./assets/body.png">
+<div style="text-align: center; font-size: 4vw; font-weight: bolder;">東京オリンピック開会式のアレ</div>
+<div style="width: fit-content; margin: 8px auto; align-content: center;">
+    <button id="init-button" type="button" onclick="init()">スタンバイ</button>
+    <div id="label-container" style="display: inline-block; color: red; font-weight: bold;"><div>開始前に左のボタンを押してね</div></div>
+</div>
+<div class="main-box">
+    <div class="scope"><video id="video"></video></div>
+    <div class="black_move scope"><img id="pict_black" src="./assets/pict_black.png" alt="" title="pict_black" class="active"></div>
+    <img class="scope" src="./assets/pict_text.png" alt="" title="pict_text">
+    <div class="scope"><img id="gif_img" src="./assets/pict_gif/Boxing.gif" alt="" title="pict_gif"></div>
+    <img class="scope" id="arrow" src="" alt="" title="arrow" style="display:none;">
+    <div class="scope"><p id="question">0</p></div>
+    <div class="scope"><p id="answer">0</p></div>
+    <div class="scope"><p id="OK">OK</p></div>
+    <div class="scope"><img id="sports_name" src="./assets/sports_name/Boxing.png" alt="" title="sports_name"></div>
+    <img class="scope" id="explain" src="./assets/0.png" alt="" title="explain">
+    <img class="scope" id="concentrate" style="visibility: hidden;" src="./assets/Concentrate.gif" alt="" title="集中線">
+    <img class="scope" id="home" style="visibility: visible;" src="./assets/background.jpeg" alt="" title="Home">
+    <div class="scope"><p id="game_name" style="color: white; text-align: center; font-weight: bold; font-family: Meiryo; font-size: 2.3vw; margin: auto; top: 2%; position: relative; visibility: visible;">キミもピクトさんに挑戦しよう!!</p></div>
+    <div class="scope"><p id="start_text" style="color: yellow; text-align: center; font-weight: bold; font-family: Meiryo; font-size: 2.3vw; margin: auto; top: 90%; position: relative; visibility: visible;">「S」キーを押してスタート</p></div>
+</div>
+<div class="explain_text" style="width: fit-content; margin: auto;"><p>(1)最初のプレイ前だけ「スタンバイ」ボタンを押す</p><p>(2)「S」キーでスタート</p><p>(3)「Q」キーでゲームを中断or終了後にスタート画面に戻る</p>
+     <p style="color: red;">【注意】ゲーム中断後に再開する場合は少しだけ遅らせてから再度スタートしてください!</p></div>
+<div style="width: fit-content;  height: 827px; margin: 8px auto;">
+    <button type="button" onclick="checkTM()" style="display: block; position: relative; width: 30vw; margin: 8px auto;">認識の様子を見る</button>
+    <div id="checkTM" style="display: none;">
+        <div style="display: inline-block; width: fit-content; margin: auto; vertical-align: top;"><canvas id="canvas"></canvas></div>
+        <div id="all-label-container" style="display: inline-block; width: 30vw;"></div>
+    </div>
+</div>
+</body>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.3.1/dist/tf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@teachablemachine/pose@0.8/dist/teachablemachine-pose.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/phaser@3.15.1/dist/phaser.min.js"></script>
+<script type="text/javascript">
+    //カメラ画像
+    const video = document.getElementById("video");
+    navigator.mediaDevices.getUserMedia({
+        video: true,
+        audio: false,
+    }).then(stream => {
+        video.srcObject = stream;
+        video.play();
+    }).catch(e => {
+      console.log(e)
+    })
+    //要素を隠す
+    function Hidden_div(id){document.getElementById(id).style.visibility = "hidden";}
+    //要素を再表示
+    function Visible_div(id){document.getElementById(id).style.visibility = "visible";}
+
+    document.addEventListener('keypress', keypress_ivent);
+    function keypress_ivent(e) {
+        if(e.code === 'KeyS' && loop_flag == false && document.getElementById("init-button").disabled == true){
+            Hidden_div('home');
+            Hidden_div('start_text');
+            Hidden_div('game_name');
+            loop_flag = true;
+            startGame();
+        }
+        else if(e.code === 'KeyQ'){
+            music.pause();
+            music.currentTime = 0;
+            Visible_div('home');
+            Visible_div('start_text');
+            Visible_div('game_name');
+            Hidden_div("concentrate");
+            document.getElementById("pict_black").className = "active";
+            document.getElementById("game_name").innerHTML = "キミもピクトさんに挑戦しよう!!";
+            document.getElementById("start_text").innerHTML = "「S」キーを押してスタート";
+            loop_flag = false;
+        }
+        return false;
+    }
+
+    //待つ関数
+    const wait = (sec) => {
+        return new Promise((resolve, reject) => {
+            setTimeout(resolve, sec*1000);
+        });
+    };
+
+    const TMid = "D_xR8LexD"; //Teachable Machineで学習させてクラウド管理しているモデルのIDを入力
+    //今回学習させた競技一覧 (※順番重要)
+    const sports_name = ['Artistic_Swimming','Athletics','Baseball','Softball','Boxing','Canoe_Sprint',
+                        'Cycling_BMX_Racing','Cycling_Road','Diving','Dressage','Fencing','Football',
+                        'Golf','Handball','Hockey','Judo','Karate_Kata','Karate_Kumite','Rhythmic',
+                        'Rowing','Rugby','Shotgun','Skateboarding','Sport_Climbing','Swimming','Surfing',
+                        'Table_Tennis','Taekwondo','Tennis','Volleyball','WaterPolo','Weightlifting','Wrestling'];
+    let classPrediction = "";//一番高い確度のポーズの表示
+    let sports_prob = Array(sports_name.length).fill(0.0);//各競技ポーズの確度を格納する配列
+    let clear_flag = 0;//出題されたポーズが取れているかを確認する
+    let random = 4;//ランダムに選ばれるポーズのインデックス番号
+    const question = 30;//出題数
+    let answer = 0;//正答数
+    const music = new Audio('./assets/BGM.mp3');//BGM
+    const se = new Audio('./assets/stadium.mp3');//最後に流れるSE
+    let loop_flag = false;//ループをキー入力で終了するためのフラグ
+    const acc = 0.2;//確度のしきい値
+    let count = 1;//現在の問題数
+    let shuffle_list;//ランダムソートしたsports_nameリスト
+    
+    //ゲーム開始時にランダムソートされたリストを確保する(被り防止用)
+    function shuffle(){
+        const sports_length = sports_name.length;//リストアップしている競技の数
+        let array = [...Array(sports_length).keys()];
+        for (let i = array.length - 1; i >= 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [array[i], array[j]] = [array[j], array[i]];
+        }
+        //出題数を増やした場合は足りない分を追加
+        if(question > sports_length){
+            for (let i = 0; i < question - sports_length; i++){
+                array.push(Math.floor(Math.random() * sports_length));
+            }
+        }
+        return array;
+    }
+
+    //変更回数が多いidを保持
+    const docOK = document.getElementById("OK");
+    const docQuestion = document.getElementById("question");
+    const docAnswer = document.getElementById("answer");
+    const docBlack = document.getElementById("pict_black");
+    const docGif = document.getElementById("gif_img");
+    const docSportsName = document.getElementById("sports_name");
+    const docExplain = document.getElementById("explain");
+    const docArrow = document.getElementById("arrow");
+
+    //ゲーム開始前の準備とゲームの説明を表示する
+    async function startGame(){
+        Visible_div("explain");
+        shuffle_list = shuffle();
+        answer = 0;
+        count = 1;
+        docOK.className = "";
+        docQuestion.innerHTML = 0;
+        docAnswer.innerHTML = answer;
+        docAnswer.className = "";
+        docAnswer.style.color = "";
+        docBlack.className = "";
+        docGif.src = "./assets/pict_gif/Boxing.gif";
+        docSportsName.src = "./assets/sports_name/Boxing.png";
+        docArrow.style.display = "none";
+        console.log("start");
+        music.play();
+        for(let i = 0; i < 6; i++){
+            docExplain.src = "./assets/"+i+".png";
+            await wait(2);
+        }
+        docExplain.style.transform = "scale(0)";
+        docExplain.style.transition = "1.0s";
+        await wait(0.1);
+        docExplain.src = "./assets/6.png";
+        docExplain.style.transform = "scale(1)";
+        await wait(2.0);
+        docExplain.style.transform = "";
+        docExplain.style.transition = "";
+        docExplain.src = "./assets/0.png";        
+        Hidden_div("explain");
+        console.log("explain done!");
+
+        if(loop_flag)window.requestAnimationFrame(loopGame);
+    }
+
+    //出題と正答を処理する
+    async function loopGame(){
+        random = shuffle_list[count-1];
+        clear_flag = 0;
+        docOK.className = "";
+        docBlack.className = "active";
+        docQuestion.innerHTML = count;
+        docGif.src = "./assets/pict_gif/"+sports_name[random]+".gif";
+        docSportsName.src = "./assets/sports_name/"+sports_name[random]+".png";
+        await wait(0.43);
+        docArrow.src = (random == 15 || random == 17) ? "./assets/arrow_right.png" : (random == 32) ? "./assets/arrow_left.png" : "";
+        docArrow.style.display = (random == 15 || random == 17 || random == 32) ? 'block': 'none';
+        await wait(2.0);
+        docBlack.className = "";
+        await wait(1.0);
+        answer += clear_flag;
+        docAnswer.innerHTML = answer;
+        docOK.className = ["","active"][clear_flag];
+        await wait(0.47);
+        count++;
+        if(count <= question && loop_flag)window.requestAnimationFrame(loopGame);
+        else if(loop_flag && count > question)endGame();
+    };
+
+    //ゲーム終了時の処理を行なう
+    async function endGame(){
+        const colorList = ["white","yellow","orange","red","fuchsia","purple","blue","aqua","green","silver","olive"];
+        se.play();
+        document.getElementById("game_name").innerHTML = "スコア";
+        document.getElementById("start_text").innerHTML = "「Q」キーを押して終了";
+        Visible_div('start_text');
+        Visible_div('game_name');
+        docAnswer.className = "active";
+        docAnswer.style.color = colorList[Math.floor(answer/(question/10))];
+        Visible_div("concentrate");
+    }
+
+    ///////////////////////////////////////////////////////////////////////
+    /* ここから下はTeachable Machineで作成した学習データを利用するためのプログラム */
+    ///////////////////////////////////////////////////////////////////////
+    // More API functions here:
+    // https://github.com/googlecreativelab/teachablemachine-community/tree/master/libraries/pose
+
+    // the link to your model provided by Teachable Machine export panel
+    const URL = "https://teachablemachine.withgoogle.com/models/"+TMid+"/";
+    let model, webcam, ctx, labelContainer, maxPredictions, labelContainerAll;
+
+    async function init() {
+        const modelURL = URL + "model.json";
+        const metadataURL = URL + "metadata.json";
+
+        // load the model and metadata
+        // Refer to tmImage.loadFromFiles() in the API to support files from a file picker
+        // Note: the pose library adds a tmPose object to your window (window.tmPose)
+        model = await tmPose.load(modelURL, metadataURL);
+        maxPredictions = model.getTotalClasses();
+
+        // Convenience function to setup a webcam
+        const size = 200;
+        const flip = true; // whether to flip the webcam
+        webcam = new tmPose.Webcam(size, size, flip); // width, height, flip
+        await webcam.setup(); // request access to the webcam
+        await webcam.play();
+        window.requestAnimationFrame(loop);
+        //music.play();
+
+        // append/get elements to the DOM
+        const canvas = document.getElementById("canvas");
+        canvas.width = size; canvas.height = size;
+        ctx = canvas.getContext("2d");
+        labelContainer = document.getElementById("label-container");
+        labelContainer.style.color = "black";
+        labelContainer.style.fontWeight = "100";
+        document.getElementById("init-button").disabled = true;
+        labelContainerAll = document.getElementById("all-label-container");
+        /* 全部の確度結果を表示 */
+        for (let i = 0; i < maxPredictions; i++) { // and class labels
+            labelContainerAll.appendChild(document.createElement("div"));
+        }
+        
+    }
+
+    async function loop(timestamp) {
+        webcam.update(); // update the webcam frame
+        await predict();
+        window.requestAnimationFrame(loop);
+    }
+
+    async function predict() {
+        // Prediction #1: run input through posenet
+        // estimatePose can take in an image, video or canvas html element
+        const { pose, posenetOutput } = await model.estimatePose(webcam.canvas);
+        // Prediction 2: run input through teachable machine classification model
+        const prediction = await model.predict(posenetOutput);
+        
+        //処理を少しでも軽くするために確認したいときだけ処理されるようにしている
+        if(document.getElementById("checkTM").style.display == "block"){
+            // 全部の確度をdivに追加
+            for (let i = 0; i < maxPredictions; i++) {
+                const classPrediction =
+                    prediction[i].className + ": " + prediction[i].probability.toFixed(2);
+                labelContainerAll.childNodes[i].innerHTML = classPrediction;
+                labelContainerAll.childNodes[i].style.fontSize = (30 * prediction[i].probability.toFixed(2)) + "px";
+            }
+            // finally draw the poses
+            drawPose(pose);
+        }
+        //確度のチェック
+        if(prediction[random].probability > acc) clear_flag = 1;
+
+        labelContainer.childNodes[0].innerHTML = prediction[random].className + ": " + prediction[random].probability.toFixed(2);
+    }
+
+    function drawPose(pose) {
+        if (webcam.canvas) {
+            ctx.drawImage(webcam.canvas, 0, 0);
+            // draw the keypoints and skeleton
+            // ポーズのポイント
+            if (pose) {
+                const minPartConfidence = 0.5;
+                tmPose.drawKeypoints(pose.keypoints, minPartConfidence, ctx);
+                tmPose.drawSkeleton(pose.keypoints, minPartConfidence, ctx);
+            }
+        }
+    }
+
+    //認識の様子の表示切り替え
+    function checkTM(){
+        const p2 = document.getElementById("checkTM");
+        p2.style.display = (p2.style.display == "none") ? "block" : "none";
+    }
+</script>
+</html>
